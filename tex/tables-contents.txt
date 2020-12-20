@@ -1,0 +1,14 @@
+Data         & affyId & exptId      & level    \\
+Descriptions & gbId   & description &          \\
+GO_Descr     & goAcc  & description &          \\
+LocusDescr   & linkId & description & species  \\
+LocusLinks   & gbId   & linkId      &          \\
+Ontologies   & linkId & goAcc       &          \\
+RefSeqs      & linkId & ntRefSeq    & aaRefSeq \\
+Sources      & exptId & source      &          \\
+Targets      & gbId   & affyId      & species  \\
+UniDescr     & uId    & description &          \\
+UniSeqs      & uId    & gbId        &          \\
+Unigenes     & linkId & uId         &          \\
+
+

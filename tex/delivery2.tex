@@ -1,0 +1,695 @@
+%-----------------------------------------------------------------
+%	DELIVERY 171218
+%	!TEX root = ./main.tex
+%-----------------------------------------------------------------
+\setcounter{section}{1}
+\setcounter{page}{1}
+\section{Delivery} % TODO change \mytitle conveniently
+% \subsection*{Objectives}
+% \begin{itemize}
+% 	\item Learn how to access a MySQL database, look for database and table structure and visualize the content.
+% 	\item Learn how to query a MySQL database to extract data following a defined data need. Practice how to translate data query needs into SQL queries.
+% \end{itemize}
+
+%--------------------
+\subsection*{Question 0}
+Can you describe the series of steps to open a database for querying?
+
+\subsubsection*{Answer}
+First of all, we need to open a MariaDB\footnote{Arch Linux does not include MySQL in the main repositories, and for the purposes of this course, both database servers are essentially interchangable.} session.
+
+\begin{lstlisting}[language=bash]
+# Start service
+sudo systemctl start mariadb.service
+# Start MariaDB
+mysql -u root -p
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+Enter password:
+\end{lstlisting}
+
+After entering the password\footnote{A password can be set up using the following command: \inline{mysqladmin -u root password <PASSWORD>}.}, we get the welcome message:
+
+\begin{lstlisting}[style=output]
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.1.29-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]>
+\end{lstlisting}
+
+Then we need to check if the the database we are interested in (which we already added to MariaDB in class) is in our list of databases:
+\begin{lstlisting}[language=sql]
+SHOW databases;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------------------+
+| Database           |
++--------------------+
+| experiments        |
+| information_schema |
+| mysql              |
+| performance_schema |
+| test               |
++--------------------+
+5 rows in set (0.00 sec)
+\end{lstlisting}
+
+Then all we do is tell MariaDB to use the \inline{experiments} database:
+\begin{lstlisting}[language=sql]
+USE experiments;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+Database changed
+\end{lstlisting}
+
+Having changed our database, we can check what tables are contained in it:
+\begin{lstlisting}[language=sql]
+SHOW Tables;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++-----------------------+
+| Tables_in_experiments |
++-----------------------+
+| Data                  |
+| Descriptions          |
+| GO_Descr              |
+| LocusDescr            |
+| LocusLinks            |
+| Ontologies            |
+| RefSeqs               |
+| Sources               |
+| Targets               |
+| UniDescr              |
+| UniSeqs               |
+| Unigenes              |
++-----------------------+
+12 rows in set (0.01 sec)
+\end{lstlisting}
+
+Since we will be using all these tables throughout the exercise, we will summarise the fields contained in each of the tables above:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{l l l l}
+		\toprule
+		\toprule
+		Table                 & \multicolumn{3}{l}{Data fields in the table}    \\
+		\midrule
+		\texttt{Data}         & \texttt{affyId}, & \texttt{exptId},      & \texttt{level}    \\
+		\texttt{Descriptions} & \texttt{gbId},   & \texttt{description}  &                   \\
+		\texttt{GO\_Descr}    & \texttt{goAcc},  & \texttt{description}  &                   \\
+		\texttt{LocusDescr}   & \texttt{linkId}, & \texttt{description}, & \texttt{species}  \\
+		\texttt{LocusLinks}   & \texttt{gbId},   & \texttt{linkId}       &                   \\
+		\texttt{Ontologies}   & \texttt{linkId}, & \texttt{goAcc}        &                   \\
+		\texttt{RefSeqs}      & \texttt{linkId}, & \texttt{ntRefSeq},    & \texttt{aaRefSeq} \\
+		\texttt{Sources}      & \texttt{exptId}, & \texttt{source}       &                   \\
+		\texttt{Targets}      & \texttt{gbId},   & \texttt{affyId},      & \texttt{species}  \\
+		\texttt{UniDescr}     & \texttt{uId},    & \texttt{description}  &                   \\
+		\texttt{UniSeqs}      & \texttt{uId},    & \texttt{gbId}         &                   \\
+		\texttt{Unigenes}     & \texttt{linkId}, & \texttt{uId}          &                   \\
+		\bottomrule
+	\end{tabular}
+	\caption{Data fields in the different tables in the \inline{experiments} database}
+	\label{tab:tablename}
+\end{table}
+
+\newpage
+%--------------------
+\subsection*{Question 1}
+What is the purpose of this query?
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM Sources;
+\end{lstlisting}
+
+\subsubsection*{Answer}
+What this command does is show all the features (columns) from table \inline{Sources}:
+
+\begin{lstlisting}[style=output]
++--------+-------------+
+| exptId | source      |
++--------+-------------+
+| 1      | Pancreas    |
+| 2      | Liver       |
+| 4      | Human Liver |
++--------+-------------+
+3 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 2}
+Get 5 GenBank IDs (\inline{gbId}) and corresponding descriptions.
+
+\subsubsection*{Answer}
+We want to select the first 5 records from table \inline{Sources}. We can easily do this using the command \inline{LIMIT}:
+\begin{lstlisting}[language=sql]
+SELECT * FROM Descriptions
+LIMIT 5;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------+-------------------------------------------+
+| gbId   | description                               |
++--------+-------------------------------------------+
+| A00142 | granulysin                                |
+| A00146 | lypase, gastric                           |
+| A03911 | seryne (or cysteine) proteinase inhibitor |
+| A06977 | albumin                                   |
+| A12027 | S100 calcium binding protein A8           |
++--------+-------------------------------------------+
+5 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 3}
+What is the purpose of this query?
+
+\begin{lstlisting}[language=sql]
+SELECT COUNT(*) FROM LocusLinks;
+\end{lstlisting}
+
+\subsubsection*{Answer}
+What this command does is count the amount of records (rows) contained in table \inline{LocusLink} and show the resulting number:
+\begin{lstlisting}[style=output]
++----------+
+| COUNT(*) |
++----------+
+|       22 |
++----------+
+1 row in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 4}
+How many different Affy IDs (\inline{affyId}) are in the expression data?
+
+\subsubsection*{Answer}
+To get the amount of different Affy IDs we need to compose \inline{COUNT()} with \inline{DISTINCT()}:
+
+\begin{lstlisting}[language=sql]
+SELECT COUNT(DISTINCT(affyId)) FROM Data;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++-------------------------+
+| COUNT(DISTINCT(affyId)) |
++-------------------------+
+|                      23 |
++-------------------------+
+1 row in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 5}
+What is the expression level of Affy ID \inline{U95-32123_at} in experiment number 1?
+
+\subsubsection*{Answer}
+Using the query below, we can see that the expression level is \inline{128}:
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM Data
+WHERE affyId='U95-32123_at' AND exptId=1;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------------+--------+-------+
+| affyId       | exptId | level |
++--------------+--------+-------+
+| U95-32123_at | 1      |   128 |
++--------------+--------+-------+
+1 row in set (0.01 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 6}
+Find all the gene descriptions, along with their GenBank IDs containing the word “Human”?
+
+\subsubsection*{Answer}
+We can do this using \inline{LIKE} when using the \inline{WHERE} clause. Notice that the argument for \inline{LIKE} is case insensitive:
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM Descriptions
+WHERE description LIKE "%human%";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------+---------------------------------------------------------+
+| gbId   | description                                             |
++--------+---------------------------------------------------------+
+| A12345 | HSLFBPS7 Human fructose-1, 6-biphosphatase              |
+| A12346 | HSU30872 Human mitosin mRNA                             |
+| A12347 | HSU33052 Human lipid-activated protein kinase           |
+| A12348 | HSU33053 Human lipid-activated protein kinase           |
+| A12349 | Human clone lambda 5 semaphorin mRNA                    |
+| A22124 | Human rearranged immunoglobulin lambda light chain mRNA |
+| A22127 | Human rearranged immunoglobulin lambda light chain mRNA |
++--------+---------------------------------------------------------+
+7 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 7}
+What Gene Ontology descriptions (and corresponding accession) contain the phrase “protein kinase”? \emph{The answer should be provided in ascending order of accessions.}
+
+
+\subsubsection*{Answer}
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM GO_Descr
+WHERE description LIKE "%protein kinase%"
+ORDER BY goAcc ASC;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++---------+----------------+
+| goAcc   | description    |
++---------+----------------+
+| 0001236 | protein kinase |
+| 0001237 | protein kinase |
+| 1112222 | protein kinase |
+| 4442222 | protein kinase |
++---------+----------------+
+4 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 8}
+Which AffyId of table \inline{Data} correspond to sequences in \inline{Targets} table with the phrase “kinase” in their description?
+
+\subsubsection*{Answer}
+
+\begin{lstlisting}[language=sql]
+SELECT Data.affyId, Descriptions.description
+FROM Data, Targets, Descriptions
+WHERE Data.affyId=Targets.affyId AND
+      Targets.gbId=Descriptions.gbId AND
+      Descriptions.description LIKE "%kinase%";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+Empty set (0.01 sec)
+\end{lstlisting}
+
+Now we use the command
+\begin{lstlisting}[language=sql]
+LOAD DATA INFILE 'file.tsv' INTO TABLE Descriptions;
+\end{lstlisting}
+to add two new entries in the \inline{Descriptions} table with \inline{gbId="M18228", "L02870"} and the string “kinase” as the description for both, where \inline{file.tsv} has the folliwing contents:
+\begin{lstlisting}[language={}, showtabs=true]
+M18228	kinase
+L02870	kinase
+\end{lstlisting}
+
+Now we repeat the query again:
+\begin{lstlisting}[language=sql]
+SELECT Data.affyId, Descriptions.description
+FROM Data, Targets, Descriptions
+WHERE Data.affyId=Targets.affyId AND
+      Targets.gbId=Descriptions.gbId AND
+      Descriptions.description LIKE "%kinase%";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+Empty set (0.00 sec)
+\end{lstlisting}
+
+The idea is that by adding the new records into the \inline{Description} table, we would obtain some results. The problem is that the data is either incomplete or not well-formatted (something we would have to report to the database architect).
+
+For instance, for the first line (\inline{M18228	kinase}) we have done the following test:
+\begin{lstlisting}[language=sql]
+SELECT * FROM Descriptions WHERE gbId LIKE "M18228";
+SELECT * FROM Targets WHERE gbId LIKE "M18228";
+SELECT * FROM Data WHERE affyId LIKE "U95_32123_at";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+MariaDB [experiments]> SELECT * FROM Descriptions WHERE gbId LIKE "M18228";
++--------+-------------+
+| gbId   | description |
++--------+-------------+
+| M18228 | kinase      |
++--------+-------------+
+1 row in set (0.00 sec)
+
+MariaDB [experiments]> SELECT * FROM Targets WHERE gbId LIKE "M18228";
++--------+---------+---------+
+| gbId   | affyId  | species |
++--------+---------+---------+
+| M18228 | 1235_at | Mm      |
++--------+---------+---------+
+1 row in set (0.00 sec)
+
+MariaDB [experiments]> SELECT * FROM Data WHERE affyId LIKE "%1235%";
+Empty set (0.01 sec)
+\end{lstlisting}
+Notice how there is no \inline{1235_at} \inline{affyId} in the table \inline{Data}.
+
+For the second line (\inline{L02870	kinase}), the problem is how the \inline{affyId} is formatted:
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM Targets WHERE gbId LIKE "L02870";
+SELECT * FROM Data WHERE affyId LIKE "U95_32123_at";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
+MariaDB [experiments]> SELECT * FROM Targets WHERE gbId LIKE "L02870";
++--------+--------------+---------+
+| gbId   | affyId       | species |
++--------+--------------+---------+
+| L02870 | U95_32123_at | Mm      |
++--------+--------------+---------+
+1 row in set (0.00 sec)
+
+MariaDB [experiments]> SELECT * FROM Data WHERE affyId LIKE "U95_32123_at";
++--------------+--------+-------+
+| affyId       | exptId | level |
++--------------+--------+-------+
+| U95-32123_at | 1      |   128 |
+| U95-32123_at | 2      |   128 |
++--------------+--------+-------+
+2 rows in set (0.00 sec)
+
+\end{lstlisting}
+Notice how in \inline{Targets}, the \inline{affyId} is formatted as \inline{U95_32123_at}, whilst in \inline{Data} they are expressed as \inline{U95-32123_at}. This causes the query \inline{WHERE Data.affyId=Targets.affyId} to return no output.
+
+\bigskip
+We could use the query below instead, but it is far from being a good practice, and it should be avoided:
+\begin{lstlisting}[language=sql]
+SELECT Data.affyId, Descriptions.description
+FROM Data, Targets, Descriptions
+WHERE Data.affyId LIKE Targets.affyId AND
+      Targets.gbId=Descriptions.gbId AND
+      Descriptions.description LIKE "%kinase%";
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------------+-------------+
+| affyId       | description |
++--------------+-------------+
+| U95-32123_at | kinase      |
+| U95-32123_at | kinase      |
++--------------+-------------+
+2 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 9}
+Get two \inline{affyId}, \inline{uId} and \inline{description} in \inline{LocusDescr} in reverse alphabetical order of descriptions.
+
+\subsubsection*{Answer}
+This question can be a little bit tricky, as there is no indication of the specific origin of the \inline{affyId} or \inline{uId}. We will show three different implementations that give us significantly different results:
+
+\begin{lstlisting}[language=sql]
+SELECT Data.affyId, UniDescr.uId, LocusDescr.description
+FROM Data, Targets, UniDescr, LocusDescr
+WHERE Data.affyId=Targets.affyId AND
+      Targets.species=LocusDescr.species AND
+      LocusDescr.description=UniDescr.description
+ORDER BY LocusDescr.description DESC
+LIMIT 2;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++---------+--------+-------------+
+| affyId  | uId    | description |
++---------+--------+-------------+
+| 5324_at | Hs1691 | Glucan      |
+| 5323_at | Hs1691 | Glucan      |
++---------+--------+-------------+
+2 rows in set (0.00 sec)
+\end{lstlisting}
+
+\begin{lstlisting}[language=sql]
+SELECT Targets.affyId, UniDescr.uId, LocusDescr.description
+FROM Targets, LocusDescr, UniDescr
+WHERE LocusDescr.species=Targets.species AND
+      LocusDescr.description=UniDescr.description
+ORDER BY LocusDescr.description DESC
+LIMIT 2;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++---------+--------+-------------+
+| affyId  | uId    | description |
++---------+--------+-------------+
+| 3156_at | Hs1691 | Glucan      |
+| 5323_at | Hs1691 | Glucan      |
++---------+--------+-------------+
+2 rows in set (0.00 sec)
+\end{lstlisting}
+
+\begin{lstlisting}[language=sql]
+SELECT Targets.affyId, UniSeqs.uId, LocusDescr.description
+FROM Targets, UniSeqs, LocusDescr, LocusLinks
+WHERE LocusLinks.linkId=LocusDescr.linkId AND
+      LocusLinks.gbId=UniSeqs.gbId AND
+      Targets.gbId=LocusLinks.gbId
+ORDER BY LocusDescr.description DESC
+LIMIT 2;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------------+--------+-------------+
+| affyId       | uId    | description |
++--------------+--------+-------------+
+| U95_40474_at | Hs1691 | Glucan      |
+| U95_32123_at | Hs1640 | Collagen    |
++--------------+--------+-------------+
+2 rows in set (0.00 sec)
+\end{lstlisting}
+
+The thing to learn from this exercise is that one must be familiar with the database and be aware of the nature of the query.
+
+%--------------------
+\subsection*{Question 10}
+How would you find the average expression level of each experiment in \inline{Data}?
+
+\subsubsection*{Answer}
+
+\begin{lstlisting}[language=sql]
+SELECT exptId, AVG(level) FROM Data
+GROUP BY exptId;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------+------------+
+| exptId | AVG(level) |
++--------+------------+
+| 1      |   125.3333 |
+| 2      |    95.3333 |
+| 3      |   126.3333 |
+| 4      |    83.5000 |
+| 5      |    92.7500 |
+| 6      |    18.3333 |
+| 7      |    20.0000 |
+| 8      |    40.0000 |
+| 9      |    20.0000 |
++--------+------------+
+9 rows in set (0.00 sec)
+\end{lstlisting}
+
+%--------------------
+\subsection*{Question 11}
+What is the average expression level of each array probe (\inline{affyId}) across all experiments?
+
+\subsubsection*{Answer}
+
+\begin{lstlisting}[language=sql]
+SELECT affyId, AVG(level) FROM Data
+GROUP BY affyId;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++---------------------------+------------+
+| affyId                    | AVG(level) |
++---------------------------+------------+
+| 31315_at                  |   250.0000 |
+| 31324_at                  |    91.0000 |
+| 31325_at                  |    89.0000 |
+| 31356_at                  |    91.0000 |
+| 31362_at                  |   260.0000 |
+| 31510_s_at                |   257.0000 |
+| 5321_at                   |    90.0000 |
+| 5322_at                   |    90.0000 |
+| 5323_at                   |    90.0000 |
+| 5324_at                   |    73.5000 |
+| 5325_at                   |    90.0000 |
+| AFFX-BioB-3_at            |    97.0000 |
+| AFFX-BioB-5_at            |    20.0000 |
+| AFFX-BioB-M_at            |    62.8000 |
+| AFFX-HSAC07/X00351_M_at   |    86.0000 |
+| AFFX-HUMBAPDH/M33197_3_st |   277.0000 |
+| AFFX-HUMTFFR/M11507_at    |    90.0000 |
+| AFFX-M27830_3_at          |   271.0000 |
+| AFFX-MurIL10_at           |     6.6667 |
+| AFFX-MurIL2_at            |    20.0000 |
+| AFFX-MurIL4_at            |    49.0000 |
+| U95-32123_at              |   128.0000 |
+| U98-40474_at              |    57.0000 |
++---------------------------+------------+
+23 rows in set (0.00 sec)
+\end{lstlisting}
+
+
+%--------------------
+\subsection*{Question 12}
+What is the purpose of the following query?
+
+\begin{lstlisting}[language=sql]
+SELECT Data.affyId, Data.level, Data.exptId, DataCopy.affyId, DataCopy.level, DataCopy.exptId
+FROM Data, Data DataCopy
+WHERE Data.level > 10 * DataCopy.level AND
+      Data.affyId=DataCopy.affyId AND
+      Data.affyId LIKE "AFFX%"
+LIMIT 10;
+\end{lstlisting}
+
+\subsubsection*{Answer}
+
+\begin{lstlisting}[style=output]
++----------------+-------+--------+----------------+-------+--------+
+| affyId         | level | exptId | affyId         | level | exptId |
++----------------+-------+--------+----------------+-------+--------+
+| AFFX-BioB-M_at |   214 | 5      | AFFX-BioB-M_at |    20 | 3      |
+| AFFX-BioB-M_at |   214 | 5      | AFFX-BioB-M_at |    20 | 7      |
+| AFFX-BioB-M_at |   214 | 5      | AFFX-BioB-M_at |    20 | 9      |
++----------------+-------+--------+----------------+-------+--------+
+3 rows in set (0.00 sec)
+\end{lstlisting}
+
+What this query is doing is to make a copy of the \inline{Data} table in order to compare the \inline{affyId}s that start with \inline{AFFX} to show the pairs that fulfil the condition of having an expression \texttt{level} of one being 10 times larger than the other one. The query lets us not only compare the expression \texttt{level}, but the \inline{exptId} value as well.
+
+% More specifically, the query selects the columns \inline{affyId}, \texttt{level} and \inline{exptId} from \inline{Data} and also the same ones from \inline{DataCopy}, which is an exact copy of table \inline{Data}. This copy has been done in the \inline{FROM} clause.
+
+% In the \inline{WHERE} clause, 3 conditions are introduced:
+% \begin{enumerate}[(i)]
+% 	\item Select those rows in \texttt{level} from\inline{Data} table which are more than 10 times higher than the rows in \texttt{level} from the copy of\inline{Data} table.
+% 	\item Select those rows in which \inline{affyId} from tables\inline{Data} and it's copy coincide.
+% 	\item Take those entries in \inline{affyId} from\inline{Data} that start with \inline{AFFX}.
+% \end{enumerate}
+
+The \inline{LIMIT 10} clause is there to show only the 10 first results, although it is unnecessary for this specific query, as there are only 3 results.
+
+%--------------------
+\subsection*{Question 13}
+Write a query to provide three different descriptions for all \inline{gbId} in table \inline{Targets}.
+
+\subsubsection*{Answer}
+
+The tricky part with creating this query is that we have 4 different descriptions (in tables \inline{Descriptions}, \inline{LocusDescr}, \inline{UniDescr}, and \inline{GO_Descr}), so depending on which ones we choose, we will have different results.
+
+Apart from that, one has to be careful on using the right relational path to connect all the tables properly. We will show two queries: (a) one to show \inline{Descriptions.description}, \inline{LocusDescr.description}, and \inline{UniDescr.description}; and (b) another one to show \inline{Descriptions.description}, \inline{GO_Descr.description}, \inline{LocusDescr.description}.
+
+For space reasons, we will only show a sample of the output.
+
+\begin{lstlisting}[language=sql]
+SELECT Targets.gbId, Descriptions.description AS description, LocusDescr.description AS LocusDescr, UniDescr.description AS UniDescr
+FROM Targets, Descriptions, LocusDescr, UniDescr, UniSeqs
+WHERE Targets.gbId=Descriptions.gbId AND
+      Targets.species=LocusDescr.species AND
+      UniSeqs.uId=UniDescr.uId AND
+      Targets.gbId=UniSeqs.gbId
+ORDER BY gbId;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------+-------------+------------+----------------+
+| gbId   | description | LocusDescr | UniDescr       |
++--------+-------------+------------+----------------+
+| S75295 | Glucan      | Collagen   | Glucan         |
+| S75295 | Glucan      | serine     | Glucan         |
+| S75295 | Glucan      | Glucan     | Glucan         |
+| S75295 | Glucan      | albumin    | Glucan         |
+| S75295 | Glucan      | granulysi  | Glucan         |
+| ...    | ...         | ...        | ....           |
++--------+-------------+------------+----------------+
+42 rows in set (0.00 sec)
+\end{lstlisting}
+
+\begin{lstlisting}[language=sql]
+SELECT Targets.gbId, Descriptions.description AS description, GO_Descr.description AS GO_Descr, LocusDescr.description AS LocusDescr
+FROM Targets, Descriptions, GO_Descr, LocusDescr, Ontologies, LocusLinks
+WHERE Descriptions.gbId=Targets.gbId AND
+      GO_Descr.goAcc=Ontologies.goAcc AND
+      LocusDescr.linkId=Ontologies.linkId AND
+      Targets.gbId=LocusLinks.gbId
+ORDER BY gbId;
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++--------+-----------------+--------------+------------+
+| gbId   | description     | GoDescr      | LocusDescr |
++--------+-----------------+--------------+------------+
+| A00142 | granulysin      | Glucan Enz   | Glucan     |
+| A00142 | granulysin      | Glucan Enz   | Glucan     |
+| A00142 | granulysin      | Serine Prot. | Collagen   |
+| A00142 | granulysin      | Serine Prot. | Collagen   |
+| A00146 | lypase, gastric | Glucan Enz   | Glucan     |
+| ...    | ...             | ...          | ....       |
++--------+-----------------+--------------+------------+
+40 rows in set (0.00 sec)
+\end{lstlisting}
+
+% \begin{lstlisting}[language=sql]
+% SELECT Targets.gbId, Descriptions.description AS description, GO_Descr.description AS GO_Descr, LocusDescr.description AS LocusDescr
+% FROM Targets, Descriptions, Ontologies, GO_Descr, LocusLinks, LocusDescr
+% WHERE Descriptions.gbId=Targets.gbId AND
+%       Targets.gbId=LocusLinks.gbId AND
+%       LocusLinks.linkId=LocusDescr.linkId AND
+%       LocusLinks.linkId=Ontologies.linkId AND
+%       Ontologies.goAcc=GO_Descr.goAcc
+% ORDER BY gbId;
+% \end{lstlisting}
+
+% \begin{lstlisting}[style=output]
+% +--------+-------------+--------------+------------+
+% | gbId   | description | GO_Descr     | LocusDescr |
+% +--------+-------------+--------------+------------+
+% | L02870 | kinase      | Serine Prot. | Collagen   |
+% | S75295 | Glucan      | Glucan Enz   | Glucan     |
+% +--------+-------------+--------------+------------+
+% 2 rows in set (0.00 sec)
+% \end{lstlisting}
+
+%--------------------
+\subsection*{Question 14}
+Write a query to provide all gene ontology (\inline{GO_descr}) descriptions related with all  species in table \inline{Targets} sorted alphabetically and providing the first five results. Export the query to a tab-separated-file with the command:
+
+\begin{lstlisting}[language=sql]
+SELECT * FROM TABLE INTO OUTFILE 'data.out';
+\end{lstlisting}
+
+\subsubsection*{Answer}
+We just need to do the usual query and add the \inline{INTO OUTFILE} expression at the end of it, as it can be seen below.
+\begin{lstlisting}[language=sql]
+SELECT Targets.species, GO_Descr.description
+FROM Targets, GO_Descr, Ontologies, LocusDescr
+WHERE Targets.species=LocusDescr.species AND
+      LocusDescr.linkId=Ontologies.linkId AND
+      Ontologies.goAcc=GO_Descr.goAcc
+ORDER BY species
+INTO OUTFILE 'data.out';
+\end{lstlisting}
+
+\begin{lstlisting}[style=output]
++---------+--------------+
+| species | description  |
++---------+--------------+
+| Hs      | Serine Prot. |
+| Hs      | Serine Prot. |
+| Hs      | Serine Prot. |
+| Hs      | Serine Prot. |
+| Hs      | Serine Prot. |
++---------+--------------+
+5 rows in set (0.00 sec)
+\end{lstlisting}
+
